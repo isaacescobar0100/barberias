@@ -315,7 +315,8 @@ $stats_barbero_query = $stats_barbero_stmt->get_result();
 
     <aside class="sidebar" id="sidebar">
         <nav class="sidebar-nav">
-            <a href="#" class="nav-link active" data-section="registro"><span>Registro</span></a>
+            <a href="#" class="nav-link active" data-section="dashboard"><span>Dashboard</span></a>
+            <a href="#" class="nav-link" data-section="registro"><span>Registrar Servicio</span></a>
             <a href="#" class="nav-link" data-section="barberos"><span>Barberos</span></a>
             <a href="#" class="nav-link" data-section="tipos_servicio"><span>Tipos de Servicio</span></a>
             <a href="#" class="nav-link" data-section="historial"><span>Historial</span></a>
@@ -326,9 +327,10 @@ $stats_barbero_query = $stats_barbero_stmt->get_result();
     <div class="container" id="main-container">
         <?php if (isset($_SESSION['mensaje'])) { echo $_SESSION['mensaje']; unset($_SESSION['mensaje']); } ?>
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>Ganancia Hoy</h3>
+        <section id="dashboard-view">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Ganancia Hoy</h3>
                 <p class="stat-number">$<?= number_format($stats['total_ganado'] ?? 0, 0, ',', '.') ?></p>
             </div>
             <div class="stat-card">
@@ -359,6 +361,7 @@ $stats_barbero_query = $stats_barbero_stmt->get_result();
                 <?php endwhile; ?>
             </div>
         </section>
+        </section> <!-- Cierre de dashboard-view -->
 
         <section class="card" id="barberos-section">
             <div class="card-header">
@@ -565,8 +568,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const hamburgerBtn = document.getElementById('hamburgerBtn');
     const sidebar = document.getElementById('sidebar');
     const navLinks = document.querySelectorAll('.sidebar-nav .nav-link');
+
+    // Nueva estructura de secciones para el dashboard
     const sections = {
-        registro: [document.getElementById('rendimiento-section'), document.getElementById('registro-section')],
+        dashboard: [document.getElementById('dashboard-view')],
+        registro: [document.getElementById('registro-section')],
         barberos: [document.getElementById('barberos-section')],
         tipos_servicio: [document.getElementById('tipos_servicio-section')],
         historial: [document.getElementById('historial-section')],
@@ -597,8 +603,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Vista por defecto es el dashboard
     const urlParams = new URLSearchParams(window.location.search);
-    let sectionToLoad = 'registro';
+    let sectionToLoad = 'dashboard';
     if (urlParams.get('view') === 'barberos') sectionToLoad = 'barberos';
     else if (urlParams.get('view') === 'tipos_servicio') sectionToLoad = 'tipos_servicio';
     else if (urlParams.get('filtro')) sectionToLoad = 'historial';
@@ -609,11 +616,13 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('costo').value = selected.dataset.precio || '';
     });
 
+    // Lógica de los formularios de edición
     document.getElementById('editForm').addEventListener('submit', e => { e.preventDefault(); const id = document.getElementById('edit_id').value; const data = { barbero_id: document.getElementById('edit_barbero').value, servicio_id: document.getElementById('edit_servicio').value, costo: document.getElementById('edit_costo').value, propina: document.getElementById('edit_propina').value }; fetch(`index.php?action=update&id=${id}`, { method: 'POST', body: JSON.stringify(data) }).then(res => res.json()).then(d => d.success ? location.reload() : alert('Error')); });
     document.getElementById('editBarberoForm').addEventListener('submit', e => { e.preventDefault(); const id = document.getElementById('edit_barbero_id').value; const data = { nombre: document.getElementById('edit_barbero_nombre').value, telefono: document.getElementById('edit_barbero_telefono').value }; fetch(`index.php?action=update_barbero&id=${id}`, { method: 'POST', body: JSON.stringify(data) }).then(res => res.json()).then(d => d.success ? location.reload() : alert('Error')); });
     document.getElementById('editTipoServicioForm').addEventListener('submit', e => { e.preventDefault(); const id = document.getElementById('edit_tipo_servicio_id').value; const data = { nombre: document.getElementById('edit_tipo_servicio_nombre').value, precio: document.getElementById('edit_tipo_servicio_precio').value }; fetch(`index.php?action=update_tipo_servicio&id=${id}`, { method: 'POST', body: JSON.stringify(data) }).then(res => res.json()).then(d => d.success ? location.reload() : alert('Error al actualizar')); });
 });
 
+// Funciones globales para modales
 let onConfirmCallback = null;
 function showConfirmModal(text, callback) { document.getElementById('confirmModalText').textContent = text; onConfirmCallback = callback; document.getElementById('confirmModal').classList.add('show'); }
 function hideConfirmModal() { document.getElementById('confirmModal').classList.remove('show'); }
