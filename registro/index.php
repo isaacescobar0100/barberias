@@ -30,7 +30,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $costo = $mysqli->real_escape_string($_POST['costo']);
         $propina = $mysqli->real_escape_string($_POST['propina'] ?: 0);
 
-        // Se añade barberia_id al INSERT
         $sql_insert = "INSERT INTO servicios (barberia_id, barbero_id, tipo_servicio_id, costo_total, propina) VALUES (?, ?, ?, ?, ?)";
         if ($stmt = $mysqli->prepare($sql_insert)) {
             $stmt->bind_param("iiidd", $barberia_id, $barbero_id, $servicio_id, $costo, $propina);
@@ -50,7 +49,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $nombre = $mysqli->real_escape_string($_POST['nombre_barbero']);
         $telefono = $mysqli->real_escape_string($_POST['telefono_barbero'] ?: null);
 
-        // Se añade barberia_id al INSERT
         $sql_barbero = "INSERT INTO barberos (barberia_id, nombre, telefono) VALUES (?, ?, ?)";
         if ($stmt = $mysqli->prepare($sql_barbero)) {
             $stmt->bind_param("iss", $barberia_id, $nombre, $telefono);
@@ -62,6 +60,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmt->close();
         }
         header("Location: " . $_SERVER['PHP_SELF'] . "?view=barberos");
+        exit();
+    }
+
+    // Agregar tipo de servicio
+    if (isset($_POST['agregar_tipo_servicio'])) {
+        $nombre_servicio = $mysqli->real_escape_string($_POST['nombre_servicio']);
+        $precio_base = $mysqli->real_escape_string($_POST['precio_base']);
+
+        $sql_tipo_servicio = "INSERT INTO tipos_servicio (barberia_id, nombre_servicio, precio_base) VALUES (?, ?, ?)";
+        if ($stmt = $mysqli->prepare($sql_tipo_servicio)) {
+            $stmt->bind_param("isd", $barberia_id, $nombre_servicio, $precio_base);
+            if ($stmt->execute()) {
+                $_SESSION['mensaje'] = '<div class="alert success">¡Tipo de servicio agregado exitosamente!</div>';
+            } else {
+                $_SESSION['mensaje'] = '<div class="alert error">Error al agregar el tipo de servicio: ' . $stmt->error . '</div>';
+            }
+            $stmt->close();
+        }
+        header("Location: " . $_SERVER['PHP_SELF'] . "?view=tipos_servicio");
         exit();
     }
 }
@@ -129,6 +146,41 @@ if (isset($_GET['action'])) {
             $success = $stmt->execute();
             $stmt->close();
             echo json_encode(['success' => $success]);
+        }
+        exit();
+    }
+
+    // Actualizar Tipo de Servicio
+    if ($_GET['action'] == 'update_tipo_servicio' && $id > 0) {
+        $data = json_decode(file_get_contents('php://input'), true);
+        $sql = "UPDATE tipos_servicio SET nombre_servicio = ?, precio_base = ? WHERE id = ? AND barberia_id = ?";
+        if ($stmt = $mysqli->prepare($sql)) {
+            $stmt->bind_param("sdii", $data['nombre'], $data['precio'], $id, $barberia_id);
+            $success = $stmt->execute();
+            $stmt->close();
+            echo json_encode(['success' => $success]);
+        }
+        exit();
+    }
+
+    // Eliminar Tipo de Servicio
+    if ($_GET['action'] == 'delete_tipo_servicio' && $id > 0) {
+        $check_stmt = $mysqli->prepare("SELECT COUNT(*) as count FROM servicios WHERE tipo_servicio_id = ? AND barberia_id = ?");
+        $check_stmt->bind_param("ii", $id, $barberia_id);
+        $check_stmt->execute();
+        $result = $check_stmt->get_result()->fetch_assoc();
+        $check_stmt->close();
+
+        if ($result['count'] > 0) {
+            echo json_encode(['success' => false, 'message' => 'Este tipo de servicio ya ha sido usado y no puede ser eliminado.']);
+        } else {
+            $sql = "DELETE FROM tipos_servicio WHERE id = ? AND barberia_id = ?";
+            if ($stmt = $mysqli->prepare($sql)) {
+                $stmt->bind_param("ii", $id, $barberia_id);
+                $success = $stmt->execute();
+                $stmt->close();
+                echo json_encode(['success' => $success]);
+            }
         }
         exit();
     }
@@ -265,6 +317,7 @@ $stats_barbero_query = $stats_barbero_stmt->get_result();
         <nav class="sidebar-nav">
             <a href="#" class="nav-link active" data-section="registro"><span>Registro</span></a>
             <a href="#" class="nav-link" data-section="barberos"><span>Barberos</span></a>
+            <a href="#" class="nav-link" data-section="tipos_servicio"><span>Tipos de Servicio</span></a>
             <a href="#" class="nav-link" data-section="historial"><span>Historial</span></a>
             <a href="#" class="nav-link" data-section="reportes"><span>Reportes</span></a>
         </nav>
@@ -274,38 +327,60 @@ $stats_barbero_query = $stats_barbero_stmt->get_result();
         <?php if (isset($_SESSION['mensaje'])) { echo $_SESSION['mensaje']; unset($_SESSION['mensaje']); } ?>
 
         <div class="stats-grid">
-             <div class="stat-card"><h3>Ganancia Hoy</h3><p class="stat-number">$<?= number_format($stats['total_ganado'] ?? 0, 0, ',', '.') ?></p></div>
-             <div class="stat-card"><h3>Servicios Hoy</h3><p class="stat-number"><?= $stats['total_servicios'] ?? 0 ?></p></div>
-             <div class="stat-card"><h3>Promedio Servicio</h3><p class="stat-number">$<?= number_format($stats['promedio_servicio'] ?? 0, 0, ',', '.') ?></p></div>
-             <div class="stat-card"><h3>Propinas Hoy</h3><p class="stat-number">$<?= number_format($stats['total_propinas'] ?? 0, 0, ',', '.') ?></p></div>
+            <div class="stat-card">
+                <h3>Ganancia Hoy</h3>
+                <p class="stat-number">$<?= number_format($stats['total_ganado'] ?? 0, 0, ',', '.') ?></p>
+            </div>
+            <div class="stat-card">
+                <h3>Servicios Hoy</h3>
+                <p class="stat-number"><?= $stats['total_servicios'] ?? 0 ?></p>
+            </div>
+            <div class="stat-card">
+                <h3>Promedio Servicio</h3>
+                <p class="stat-number">$<?= number_format($stats['promedio_servicio'] ?? 0, 0, ',', '.') ?></p>
+            </div>
+            <div class="stat-card">
+                <h3>Propinas Hoy</h3>
+                <p class="stat-number">$<?= number_format($stats['total_propinas'] ?? 0, 0, ',', '.') ?></p>
+            </div>
         </div>
 
         <section class="card" id="rendimiento-section">
-             <div class="card-header"><h2>Rendimiento por Barbero (Hoy)</h2></div>
-             <div class="barberos-stats">
-                 <?php while($barbero_stat = $stats_barbero_query->fetch_assoc()): ?>
-                 <div class="barbero-stat-item">
-                     <div class="barbero-name"><?= htmlspecialchars($barbero_stat['nombre']) ?></div>
-                     <div class="barbero-services"><?= $barbero_stat['servicios'] ?> servicios</div>
-                     <div class="barbero-total">$<?= number_format($barbero_stat['total'], 0, ',', '.') ?></div>
-                 </div>
-                 <?php endwhile; ?>
-             </div>
+            <div class="card-header">
+                <h2>Rendimiento por Barbero (Hoy)</h2>
+            </div>
+            <div class="barberos-stats">
+                <?php while($barbero_stat = $stats_barbero_query->fetch_assoc()): ?>
+                <div class="barbero-stat-item">
+                    <div class="barbero-name"><?= htmlspecialchars($barbero_stat['nombre']) ?></div>
+                    <div class="barbero-services"><?= $barbero_stat['servicios'] ?> servicios</div>
+                    <div class="barbero-total">$<?= number_format($barbero_stat['total'], 0, ',', '.') ?></div>
+                </div>
+                <?php endwhile; ?>
+            </div>
         </section>
 
         <section class="card" id="barberos-section">
-             <div class="card-header"><h2>Gestión de Barberos</h2></div>
-             <div style="padding: 2rem;">
+            <div class="card-header">
+                <h2>Gestión de Barberos</h2>
+            </div>
+            <div style="padding: 2rem;">
                 <h3>Agregar Nuevo Barbero</h3>
                 <form action="index.php" method="POST" id="barberoForm">
                     <div class="form-grid">
-                        <div class="form-group"><label>Nombre del Barbero</label><input type="text" name="nombre_barbero" required></div>
-                        <div class="form-group"><label>Teléfono (Opcional)</label><input type="tel" name="telefono_barbero"></div>
+                        <div class="form-group">
+                            <label>Nombre del Barbero</label>
+                            <input type="text" name="nombre_barbero" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono (Opcional)</label>
+                            <input type="tel" name="telefono_barbero">
+                        </div>
                     </div>
                     <button type="submit" name="agregar_barbero" class="btn-primary">Agregar Barbero</button>
                 </form>
             </div>
-             <div style="padding: 0 2rem 2rem;">
+            <div style="padding: 0 2rem 2rem;">
                 <h3>Barberos Registrados</h3>
                 <div class="barberos-list">
                     <?php
@@ -316,7 +391,12 @@ $stats_barbero_query = $stats_barbero_stmt->get_result();
                     while($barbero = $barberos_lista->fetch_assoc()):
                     ?>
                         <div class="barbero-card" data-id="<?= $barbero['id'] ?>">
-                            <div class="barbero-info"><h4><?= htmlspecialchars($barbero['nombre']) ?></h4><?php if($barbero['telefono']): ?><p>📱 <?= htmlspecialchars($barbero['telefono']) ?></p><?php endif; ?></div>
+                            <div class="barbero-info">
+                                <h4><?= htmlspecialchars($barbero['nombre']) ?></h4>
+                                <?php if($barbero['telefono']): ?>
+                                    <p>📱 <?= htmlspecialchars($barbero['telefono']) ?></p>
+                                <?php endif; ?>
+                            </div>
                             <div class="barbero-actions">
                                 <button onclick="editarBarbero(<?= $barbero['id'] ?>, '<?= htmlspecialchars($barbero['nombre'], ENT_QUOTES) ?>', '<?= htmlspecialchars($barbero['telefono'] ?? '', ENT_QUOTES) ?>')" class="btn-action btn-edit">Editar</button>
                                 <button onclick="eliminarBarbero(<?= $barbero['id'] ?>)" class="btn-action btn-delete">Eliminar</button>
@@ -327,21 +407,101 @@ $stats_barbero_query = $stats_barbero_stmt->get_result();
             </div>
         </section>
 
+        <section class="card" id="tipos_servicio-section">
+            <div class="card-header"><h2>Gestión de Tipos de Servicio</h2></div>
+            <div style="padding: 2rem;">
+                <h3>Agregar Nuevo Tipo de Servicio</h3>
+                <form action="index.php" method="POST">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="nombre_servicio">Nombre del Servicio</label>
+                            <input type="text" id="nombre_servicio" name="nombre_servicio" required placeholder="Ej: Corte Premium">
+                        </div>
+                        <div class="form-group">
+                            <label for="precio_base">Precio Base (COP)</label>
+                            <input type="number" id="precio_base" name="precio_base" step="1000" min="0" required placeholder="Ej: 25000">
+                        </div>
+                    </div>
+                    <button type="submit" name="agregar_tipo_servicio" class="btn-primary">Agregar Tipo de Servicio</button>
+                </form>
+            </div>
+            <div style="padding: 0 2rem 2rem;">
+                <h3>Tipos de Servicio Registrados</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombre del Servicio</th>
+                                <th>Precio Base</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            $tipos_servicio_query = $mysqli->prepare("SELECT id, nombre_servicio, precio_base FROM tipos_servicio WHERE barberia_id = ? ORDER BY nombre_servicio");
+                            $tipos_servicio_query->bind_param("i", $barberia_id);
+                            $tipos_servicio_query->execute();
+                            $tipos_servicio_result = $tipos_servicio_query->get_result();
+                            while ($tipo_servicio = $tipos_servicio_result->fetch_assoc()):
+                            ?>
+                            <tr data-id="<?= $tipo_servicio['id'] ?>">
+                                <td><?= htmlspecialchars($tipo_servicio['nombre_servicio']) ?></td>
+                                <td>$<?= number_format($tipo_servicio['precio_base'], 0, ',', '.') ?></td>
+                                <td class="actions-cell">
+                                    <button onclick="editarTipoServicio(<?= $tipo_servicio['id'] ?>, '<?= htmlspecialchars($tipo_servicio['nombre_servicio'], ENT_QUOTES) ?>', '<?= $tipo_servicio['precio_base'] ?>')" class="btn-action btn-edit">Editar</button>
+                                    <button onclick="eliminarTipoServicio(<?= $tipo_servicio['id'] ?>)" class="btn-action btn-delete">Eliminar</button>
+                                </td>
+                            </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
         <section class="card" id="registro-section">
-            <div class="card-header"><h2>Registrar Nuevo Servicio</h2></div>
+            <div class="card-header">
+                <h2>Registrar Nuevo Servicio</h2>
+            </div>
             <form action="index.php" method="POST" id="registroForm" style="padding: 2rem;">
                 <div class="form-grid">
-                    <div class="form-group"><label>Barbero</label><select name="barbero_id" required><option value="">Seleccione...</option><?php $barberos_query->data_seek(0); while ($barbero = $barberos_query->fetch_assoc()): ?><option value="<?= $barbero['id']; ?>"><?= htmlspecialchars($barbero['nombre']); ?></option><?php endwhile; ?></select></div>
-                    <div class="form-group"><label>Tipo de Servicio</label><select id="servicio_id" name="servicio_id" required><option value="">Seleccione...</option><?php $servicios_query->data_seek(0); while ($servicio = $servicios_query->fetch_assoc()): ?><option value="<?= $servicio['id']; ?>" data-precio="<?= $servicio['precio_base']; ?>"><?= htmlspecialchars($servicio['nombre_servicio']) . ' - $' . number_format($servicio['precio_base'], 0, ',', '.'); ?></option><?php endwhile; ?></select></div>
-                    <div class="form-group"><label>Costo Total (COP)</label><input type="number" id="costo" name="costo" step="1000" min="0" required></div>
-                    <div class="form-group"><label>Propina (COP)</label><input type="number" name="propina" step="1000" min="0" value="0"></div>
+                    <div class="form-group">
+                        <label>Barbero</label>
+                        <select name="barbero_id" required>
+                            <option value="">Seleccione...</option>
+                            <?php $barberos_query->data_seek(0); while ($barbero = $barberos_query->fetch_assoc()): ?>
+                                <option value="<?= $barbero['id']; ?>"><?= htmlspecialchars($barbero['nombre']); ?></option>
+                            <?php endwhile; ?>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Servicio</label>
+                        <select id="servicio_id" name="servicio_id" required>
+                            <option value="">Seleccione...</option>
+                            <?php $servicios_query->data_seek(0); while ($servicio = $servicios_query->fetch_assoc()): ?>
+                                <option value="<?= $servicio['id']; ?>" data-precio="<?= $servicio['precio_base']; ?>">
+                                    <?= htmlspecialchars($servicio['nombre_servicio']) . ' - $' . number_format($servicio['precio_base'], 0, ',', '.'); ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Costo Total (COP)</label>
+                        <input type="number" id="costo" name="costo" step="1000" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Propina (COP)</label>
+                        <input type="number" name="propina" step="1000" min="0" value="0">
+                    </div>
                 </div>
                 <button type="submit" name="registrar_corte" class="btn-primary">Registrar Servicio</button>
             </form>
         </section>
 
         <section class="card" id="reportes-section">
-            <div class="card-header"><h2>Descargar Reportes</h2></div>
+            <div class="card-header">
+                <h2>Descargar Reportes</h2>
+            </div>
             <div class="reportes-grid">
                 <a href="?export=dia" class="reporte-btn"><span>Reporte del Día</span></a>
                 <a href="?export=semana" class="reporte-btn"><span>Reporte Semanal</span></a>
@@ -351,13 +511,42 @@ $stats_barbero_query = $stats_barbero_stmt->get_result();
         </section>
 
         <section class="card" id="historial-section">
-            <div class="card-header"><h2>Historial de Servicios</h2><div class="filter-buttons"><a href="?filtro=hoy" class="filter-btn <?= $filtro_fecha == 'hoy' ? 'active' : '' ?>">Hoy</a><a href="?filtro=semana" class="filter-btn <?= $filtro_fecha == 'semana' ? 'active' : '' ?>">Semana</a><a href="?filtro=mes" class="filter-btn <?= $filtro_fecha == 'mes' ? 'active' : '' ?>">Mes</a><a href="?filtro=todos" class="filter-btn <?= $filtro_fecha == 'todos' ? 'active' : '' ?>">Todos</a></div></div>
+            <div class="card-header">
+                <h2>Historial de Servicios</h2>
+                <div class="filter-buttons">
+                    <a href="?filtro=hoy" class="filter-btn <?= $filtro_fecha == 'hoy' ? 'active' : '' ?>">Hoy</a>
+                    <a href="?filtro=semana" class="filter-btn <?= $filtro_fecha == 'semana' ? 'active' : '' ?>">Semana</a>
+                    <a href="?filtro=mes" class="filter-btn <?= $filtro_fecha == 'mes' ? 'active' : '' ?>">Mes</a>
+                    <a href="?filtro=todos" class="filter-btn <?= $filtro_fecha == 'todos' ? 'active' : '' ?>">Todos</a>
+                </div>
+            </div>
             <div class="table-wrapper">
                 <table>
-                    <thead><tr><th>Fecha</th><th>Barbero</th><th>Servicio</th><th>Costo</th><th>Propina</th><th>Total</th><th>Acciones</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Barbero</th>
+                            <th>Servicio</th>
+                            <th>Costo</th>
+                            <th>Propina</th>
+                            <th>Total</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         <?php while ($registro = $historial_query->fetch_assoc()): ?>
-                            <tr data-id="<?= $registro['id'] ?>"><td data-label="Fecha"><?= date('d/m/Y H:i', strtotime($registro['fecha_registro'])) ?></td><td data-label="Barbero" data-barbero-id="<?= $registro['barbero_id'] ?>"><?= htmlspecialchars($registro['nombre_barbero']) ?></td><td data-label="Servicio" data-servicio-id="<?= $registro['tipo_servicio_id'] ?>"><?= htmlspecialchars($registro['nombre_servicio']) ?></td><td data-label="Costo" data-costo="<?= $registro['costo_total'] ?>">$<?= number_format($registro['costo_total'], 0, ',', '.') ?></td><td data-label="Propina" data-propina="<?= $registro['propina'] ?>">$<?= number_format($registro['propina'], 0, ',', '.') ?></td><td data-label="Total">$<?= number_format($registro['costo_total'] + $registro['propina'], 0, ',', '.') ?></td><td data-label="Acciones" class="actions-cell"><button onclick="editarServicio(<?= $registro['id'] ?>)" class="btn-action btn-edit">Editar</button><button onclick="eliminarServicio(<?= $registro['id'] ?>)" class="btn-action btn-delete">Eliminar</button></td></tr>
+                            <tr data-id="<?= $registro['id'] ?>">
+                                <td data-label="Fecha"><?= date('d/m/Y H:i', strtotime($registro['fecha_registro'])) ?></td>
+                                <td data-label="Barbero" data-barbero-id="<?= $registro['barbero_id'] ?>"><?= htmlspecialchars($registro['nombre_barbero']) ?></td>
+                                <td data-label="Servicio" data-servicio-id="<?= $registro['tipo_servicio_id'] ?>"><?= htmlspecialchars($registro['nombre_servicio']) ?></td>
+                                <td data-label="Costo" data-costo="<?= $registro['costo_total'] ?>">$<?= number_format($registro['costo_total'], 0, ',', '.') ?></td>
+                                <td data-label="Propina" data-propina="<?= $registro['propina'] ?>">$<?= number_format($registro['propina'], 0, ',', '.') ?></td>
+                                <td data-label="Total">$<?= number_format($registro['costo_total'] + $registro['propina'], 0, ',', '.') ?></td>
+                                <td data-label="Acciones" class="actions-cell">
+                                    <button onclick="editarServicio(<?= $registro['id'] ?>)" class="btn-action btn-edit">Editar</button>
+                                    <button onclick="eliminarServicio(<?= $registro['id'] ?>)" class="btn-action btn-delete">Eliminar</button>
+                                </td>
+                            </tr>
                         <?php endwhile; ?>
                     </tbody>
                 </table>
@@ -368,6 +557,7 @@ $stats_barbero_query = $stats_barbero_stmt->get_result();
     <!-- Modals -->
     <div id="editModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Editar Servicio</h3><span class="close" onclick="cerrarModal('editModal')">&times;</span></div><div class="modal-body"><form id="editForm"><input type="hidden" id="edit_id"><div class="form-group"><label>Barbero</label><select id="edit_barbero" required><?php $barberos_query->data_seek(0); while ($barbero = $barberos_query->fetch_assoc()): ?><option value="<?= $barbero['id']; ?>"><?= htmlspecialchars($barbero['nombre']); ?></option><?php endwhile; ?></select></div><div class="form-group"><label>Servicio</label><select id="edit_servicio" required><?php $servicios_query->data_seek(0); while ($servicio = $servicios_query->fetch_assoc()): ?><option value="<?= $servicio['id']; ?>"><?= htmlspecialchars($servicio['nombre_servicio']); ?></option><?php endwhile; ?></select></div><div class="form-group"><label>Costo</label><input type="number" id="edit_costo" required></div><div class="form-group"><label>Propina</label><input type="number" id="edit_propina"></div><button type="submit" class="btn-primary">Guardar</button></form></div></div></div>
     <div id="editBarberoModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Editar Barbero</h3><span class="close" onclick="cerrarModal('editBarberoModal')">&times;</span></div><div class="modal-body"><form id="editBarberoForm"><input type="hidden" id="edit_barbero_id"><div class="form-group"><label>Nombre</label><input type="text" id="edit_barbero_nombre" required></div><div class="form-group"><label>Teléfono</label><input type="tel" id="edit_barbero_telefono"></div><button type="submit" class="btn-primary">Guardar</button></form></div></div></div>
+    <div id="editTipoServicioModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Editar Tipo de Servicio</h3><span class="close" onclick="cerrarModal('editTipoServicioModal')">&times;</span></div><div class="modal-body"><form id="editTipoServicioForm"><input type="hidden" id="edit_tipo_servicio_id"><div class="form-group"><label>Nombre del Servicio</label><input type="text" id="edit_tipo_servicio_nombre" required></div><div class="form-group"><label>Precio Base (COP)</label><input type="number" id="edit_tipo_servicio_precio" step="1000" min="0" required></div><button type="submit" class="btn-primary">Guardar Cambios</button></form></div></div></div>
     <div id="confirmModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Confirmar</h3><span class="close" onclick="hideConfirmModal()">&times;</span></div><div class="modal-body"><p id="confirmModalText"></p><div class="modal-actions"><button id="cancelBtn" class="btn-secondary">Cancelar</button><button id="confirmBtn" class="btn-primary">Confirmar</button></div></div></div></div>
 
 <script>
@@ -378,6 +568,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const sections = {
         registro: [document.getElementById('rendimiento-section'), document.getElementById('registro-section')],
         barberos: [document.getElementById('barberos-section')],
+        tipos_servicio: [document.getElementById('tipos_servicio-section')],
         historial: [document.getElementById('historial-section')],
         reportes: [document.getElementById('reportes-section')]
     };
@@ -409,6 +600,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
     let sectionToLoad = 'registro';
     if (urlParams.get('view') === 'barberos') sectionToLoad = 'barberos';
+    else if (urlParams.get('view') === 'tipos_servicio') sectionToLoad = 'tipos_servicio';
     else if (urlParams.get('filtro')) sectionToLoad = 'historial';
     showSection(sectionToLoad);
 
@@ -419,6 +611,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('editForm').addEventListener('submit', e => { e.preventDefault(); const id = document.getElementById('edit_id').value; const data = { barbero_id: document.getElementById('edit_barbero').value, servicio_id: document.getElementById('edit_servicio').value, costo: document.getElementById('edit_costo').value, propina: document.getElementById('edit_propina').value }; fetch(`index.php?action=update&id=${id}`, { method: 'POST', body: JSON.stringify(data) }).then(res => res.json()).then(d => d.success ? location.reload() : alert('Error')); });
     document.getElementById('editBarberoForm').addEventListener('submit', e => { e.preventDefault(); const id = document.getElementById('edit_barbero_id').value; const data = { nombre: document.getElementById('edit_barbero_nombre').value, telefono: document.getElementById('edit_barbero_telefono').value }; fetch(`index.php?action=update_barbero&id=${id}`, { method: 'POST', body: JSON.stringify(data) }).then(res => res.json()).then(d => d.success ? location.reload() : alert('Error')); });
+    document.getElementById('editTipoServicioForm').addEventListener('submit', e => { e.preventDefault(); const id = document.getElementById('edit_tipo_servicio_id').value; const data = { nombre: document.getElementById('edit_tipo_servicio_nombre').value, precio: document.getElementById('edit_tipo_servicio_precio').value }; fetch(`index.php?action=update_tipo_servicio&id=${id}`, { method: 'POST', body: JSON.stringify(data) }).then(res => res.json()).then(d => d.success ? location.reload() : alert('Error al actualizar')); });
 });
 
 let onConfirmCallback = null;
@@ -430,8 +623,10 @@ function cerrarModal(modalId) { document.getElementById(modalId).classList.remov
 window.onclick = e => { if (e.target.classList.contains('modal')) e.target.classList.remove('show'); };
 function eliminarServicio(id) { showConfirmModal('¿Seguro?', () => { fetch(`index.php?action=delete&id=${id}`).then(res => res.json()).then(d => d.success ? location.reload() : alert('Error')); }); }
 function eliminarBarbero(id) { showConfirmModal('¿Seguro?', () => { fetch(`index.php?action=delete_barbero&id=${id}`).then(res => res.json()).then(d => d.success ? location.reload() : alert(d.message || 'Error')); }); }
+function eliminarTipoServicio(id) { showConfirmModal('¿Seguro que quieres eliminar este tipo de servicio?', () => { fetch(`index.php?action=delete_tipo_servicio&id=${id}`).then(res => res.json()).then(d => d.success ? location.reload() : alert(d.message || 'Error al eliminar')); }); }
 function editarServicio(id) { const r = document.querySelector(`tr[data-id="${id}"]`); document.getElementById('edit_id').value = id; document.getElementById('edit_barbero').value = r.querySelector('[data-barbero-id]').dataset.barberoId; document.getElementById('edit_servicio').value = r.querySelector('[data-servicio-id]').dataset.servicioId; document.getElementById('edit_costo').value = r.querySelector('[data-costo]').dataset.costo; document.getElementById('edit_propina').value = r.querySelector('[data-propina]').dataset.propina; document.getElementById('editModal').classList.add('show'); }
 function editarBarbero(id, nombre, telefono) { document.getElementById('edit_barbero_id').value = id; document.getElementById('edit_barbero_nombre').value = nombre; document.getElementById('edit_barbero_telefono').value = telefono; document.getElementById('editBarberoModal').classList.add('show'); }
+function editarTipoServicio(id, nombre, precio) { document.getElementById('edit_tipo_servicio_id').value = id; document.getElementById('edit_tipo_servicio_nombre').value = nombre; document.getElementById('edit_tipo_servicio_precio').value = precio; document.getElementById('editTipoServicioModal').classList.add('show'); }
 </script>
 </body>
 </html>
