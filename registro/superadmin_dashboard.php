@@ -109,12 +109,34 @@ $admins_query = $mysqli->query("
 <body>
     <div class="dashboard-container">
         <header class="dashboard-header">
-            <h1>Panel de Superadministrador</h1>
+            <div class="header-content">
+                <button class="hamburger-btn" id="hamburgerBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <h1>Panel de Superadministrador</h1>
+            </div>
             <div class="user-info">
                 <span>Bienvenido, <strong><?php echo htmlspecialchars($_SESSION['user_nombre']); ?></strong></span>
                 <a href="logout.php" class="btn btn-logout">Cerrar Sesión</a>
             </div>
         </header>
+
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-link active" data-section="barberias">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8" cy="7" r="4"/></svg>
+                    <span class="nav-text">Gestionar Barberías</span>
+                </a>
+                <a href="#" class="nav-link" data-section="admins">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="20" y1="19" x2="20" y2="16"/><line x1="18.5" y1="17.5" x2="21.5" y2="17.5"/></svg>
+                    <span class="nav-text">Gestionar Admins</span>
+                </a>
+            </nav>
+        </aside>
 
         <?php if ($mensaje): ?>
             <div class="alert alert-success"><?php echo $mensaje; ?></div>
@@ -123,9 +145,9 @@ $admins_query = $mysqli->query("
             <div class="alert alert-error"><?php echo $error; ?></div>
         <?php endif; ?>
 
-        <main class="dashboard-content">
+        <main class="dashboard-content" id="main-container">
             <!-- Sección de Gestión de Barberías -->
-            <section class="card">
+            <section class="card" id="barberias-section">
                 <div class="card-header">
                     <h2>Gestionar Barberías</h2>
                 </div>
@@ -179,7 +201,7 @@ $admins_query = $mysqli->query("
             </section>
 
             <!-- Sección de Gestión de Administradores -->
-            <section class="card">
+            <section class="card" id="admins-section">
                 <div class="card-header">
                     <h2>Gestionar Administradores</h2>
                 </div>
@@ -248,6 +270,53 @@ $admins_query = $mysqli->query("
             </section>
         </main>
     </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const sidebar = document.getElementById('sidebar');
+    const navLinks = document.querySelectorAll('.sidebar-nav .nav-link');
+    const sections = document.querySelectorAll('#main-container section.card');
+
+    // --- Sidebar Toggle ---
+    if (hamburgerBtn && sidebar) {
+        hamburgerBtn.addEventListener('click', () => {
+            if (window.innerWidth > 992) { // Corresponds to the media query in admin_styles.css
+                document.body.classList.toggle('sidebar-collapsed');
+            } else {
+                sidebar.classList.toggle('show');
+            }
+        });
+    }
+
+    // --- Navigation ---
+    function showSection(sectionName) {
+        navLinks.forEach(link => {
+            link.classList.toggle('active', link.dataset.section === sectionName);
+        });
+        sections.forEach(card => {
+            card.style.display = card.id === `${sectionName}-section` ? 'block' : 'none';
+        });
+    }
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const sectionName = this.dataset.section;
+            showSection(sectionName);
+
+            // Hide sidebar on mobile after clicking a link
+            if (window.innerWidth <= 992 && sidebar.classList.contains('show')) {
+                sidebar.classList.remove('show');
+            }
+        });
+    });
+
+    // --- Initial View Setup ---
+    // Show the first section by default
+    showSection('barberias');
+});
+</script>
 </body>
 </html>
 <?php

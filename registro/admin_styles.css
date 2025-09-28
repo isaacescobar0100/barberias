@@ -230,3 +230,108 @@ tbody tr:hover {
         gap: 15px;
     }
 }
+
+/* =============================================
+   SIDEBAR Y LAYOUT ADICIONAL
+   ============================================= */
+.sidebar {
+    width: 260px;
+    background: #2c3e50; /* Un color oscuro para el sidebar del admin */
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    padding-top: 2rem;
+    z-index: 1000;
+    transition: transform 0.3s ease-in-out;
+}
+
+.dashboard-header {
+    position: sticky;
+    top: 0;
+    z-index: 950;
+    margin-left: 260px;
+    width: calc(100% - 260px - 40px); /* 40px for padding */
+    transition: all 0.3s ease-in-out;
+}
+
+.dashboard-content {
+    margin-left: 260px;
+    transition: margin-left 0.3s ease-in-out;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    padding: 0.875rem 1rem;
+    border-radius: 8px;
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+.nav-link:hover { background-color: #34495e; }
+.nav-link.active { background-color: var(--primary-color); }
+.nav-link .nav-icon { width: 24px; height: 24px; margin-right: 1rem; }
+.nav-link .nav-text { font-size: 1rem; }
+
+.hamburger-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    padding: 0.5rem;
+}
+.hamburger-btn svg { width: 28px; height: 28px; }
+
+/* =============================================
+   COLLAPSIBLE SIDEBAR STYLES
+   ============================================= */
+body.sidebar-collapsed .sidebar {
+    transform: translateX(-100%);
+}
+
+body.sidebar-collapsed .dashboard-header,
+body.sidebar-collapsed .dashboard-content {
+    margin-left: 0;
+    width: calc(100% - 40px); /* Adjust for padding */
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .dashboard-header {
+        margin-left: 0;
+        width: calc(100% - 40px);
+    }
+
+    .dashboard-content {
+        margin-left: 0;
+    }
+
+    .sidebar {
+        transform: translateX(-100%);
+        box-shadow: 5px 0px 15px rgba(0,0,0,0.2);
+    }
+
+    .sidebar.show {
+        transform: translateX(0);
+    }
+
+    .hamburger-btn {
+        display: block;
+    }
+}

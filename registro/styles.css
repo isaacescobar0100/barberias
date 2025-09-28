@@ -171,15 +171,12 @@ h1 {
 .nav-text { font-size: 1rem; }
 
 .hamburger-btn {
-    display: none;
+    display: block;
     background: none;
     border: none;
     color: var(--texto-principal);
     cursor: pointer;
     padding: 0.5rem;
-    position: absolute;
-    top: 18px;
-    left: 15px;
     z-index: 1200;
 }
 .hamburger-btn svg { width: 28px; height: 28px; }
@@ -858,6 +855,20 @@ table tfoot td {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* =============================================
+   COLLAPSIBLE SIDEBAR STYLES
+   ============================================= */
+body.sidebar-collapsed .sidebar {
+    transform: translateX(-100%);
+}
+
+body.sidebar-collapsed header,
+body.sidebar-collapsed .container,
+body.sidebar-collapsed #main-container {
+    margin-left: 0;
+    width: 100%;
 }
 
 /* =============================================
