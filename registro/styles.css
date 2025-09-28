@@ -140,10 +140,28 @@ h1 {
     font-weight: 500;
 }
 
-.header-stats { display: flex; gap: 2rem; }
+.header-stats { display: flex; gap: 1.5rem; }
 .header-stats .stat-item { display: flex; flex-direction: column; align-items: flex-end; }
-.header-stats .stat-label { font-size: 0.75rem; color: var(--texto-secundario); text-transform: uppercase; }
-.header-stats .stat-value { font-size: 1.25rem; font-weight: 700; color: var(--texto-principal); }
+.header-stats .stat-label { font-size: 0.7rem; color: var(--texto-secundario); text-transform: uppercase; }
+.header-stats .stat-value { font-size: 1.1rem; font-weight: 700; color: var(--texto-principal); }
+
+.header-right-section {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.btn-logout {
+    background: #dc3545;
+    border-color: #dc3545;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+}
+
+.btn-logout:hover {
+    background: #c82333;
+    border-color: #c82333;
+}
 
 /* =============================================
    SIDEBAR & NAVEGACIÓN
@@ -893,7 +911,7 @@ table tfoot td {
     }
     
     .header-content {
-        justify-content: center;
+        justify-content: space-between;
     }
     
     .header-stats {
