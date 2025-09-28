@@ -208,7 +208,7 @@ if (isset($_GET['export'])) {
     echo '<head><meta charset="UTF-8"></head>';
     echo '<body>';
     echo '<table border="1">';
-    echo '<tr style="background-color:#1e3a5f; color:white; font-weight:bold;">';
+    echo '<tr style="background-color:#005A9C; color:white; font-weight:bold;">';
     echo '<th>Fecha</th><th>Hora</th><th>Barbero</th><th>Servicio</th>';
     echo '<th>Costo (COP)</th><th>Propina (COP)</th><th>Total (COP)</th>';
     echo '</tr>';
@@ -233,7 +233,7 @@ if (isset($_GET['export'])) {
             $total_general += $row['total'];
         }
         
-        echo '<tr style="background-color:#dc2626; color:white; font-weight:bold;">';
+        echo '<tr style="background-color:#007BFF; color:white; font-weight:bold;">';
         echo '<td colspan="6">TOTAL GENERAL</td>';
         echo '<td>$' . number_format($total_general, 0, ',', '.') . '</td>';
         echo '</tr>';
@@ -491,7 +491,7 @@ $stats_barbero_query = $mysqli->query("
             
             <!-- Formulario para agregar barbero -->
             <div style="padding: 2rem;">
-                <h3 style="color: var(--primary); margin-bottom: 1.5rem;">Agregar Nuevo Barbero</h3>
+                <h3 style="color: var(--azul-secundario); margin-bottom: 1.5rem;">Agregar Nuevo Barbero</h3>
                 <form action="index.php" method="POST" id="barberoForm">
                     <div class="form-grid">
                         <div class="form-group">
@@ -530,7 +530,7 @@ $stats_barbero_query = $mysqli->query("
             
             <!-- Lista de barberos existentes -->
             <div style="padding: 0 2rem 2rem;">
-                <h3 style="color: var(--primary); margin-bottom: 1.5rem;">Barberos Registrados</h3>
+                <h3 style="color: var(--azul-secundario); margin-bottom: 1.5rem;">Barberos Registrados</h3>
                 <div class="barberos-list">
                     <?php 
                     // Consultar todos los barberos con sus estadísticas
