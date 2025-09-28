@@ -1,8 +1,9 @@
 <?php
 // 1. INICIAR SESIÓN Y PROTEGER LA PÁGINA
 session_start();
-// La configuración de la BD ahora está en la raíz del proyecto
-require_once '../db_config.php';
+// La configuración de la BD ahora está en la raíz del proyecto.
+// Usamos __DIR__ para una ruta más robusta.
+require_once __DIR__ . '/../db_config.php';
 
 // Verificar si el usuario está logueado y es un administrador
 if (!isset($_SESSION['user_id']) || $_SESSION['user_rol'] !== 'admin') {
