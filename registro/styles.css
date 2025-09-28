@@ -263,6 +263,107 @@ table tfoot td { padding: 1.25rem 1rem; font-weight: 700; }
 .alert.error { background: linear-gradient(135deg, #dc3545, #c82333); }
 
 /* =============================================
+   SECCIÓN DE REPORTES
+   ============================================= */
+.reportes-grid {
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.reporte-btn {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: var(--blanco-puro);
+    color: var(--texto-principal);
+    text-decoration: none;
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px var(--sombra-media);
+    border: 1px solid var(--gris-bordes);
+}
+
+.reporte-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px var(--sombra-fuerte);
+    border-color: var(--azul-primario);
+}
+
+.reporte-btn .icon-wrapper {
+    width: 60px;
+    height: 60px;
+    background: var(--gradiente-boton);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.reporte-btn svg {
+    width: 30px;
+    height: 30px;
+    color: var(--blanco-puro);
+}
+
+.reporte-btn span {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+/* =============================================
+   ESTADÍSTICAS POR BARBERO
+   ============================================= */
+.barberos-stats {
+    padding: 2rem;
+}
+
+.barbero-stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    background: var(--gris-claro);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    border: 1px solid var(--gris-bordes);
+}
+
+.barbero-stat-item:hover {
+    background: var(--blanco-puro);
+    transform: scale(1.02);
+    border-color: var(--azul-primario);
+}
+
+.barbero-name {
+    font-weight: 700;
+    color: var(--texto-principal);
+    font-size: 1.1rem;
+    flex-grow: 1;
+}
+
+.barbero-services {
+    color: var(--texto-secundario);
+    font-size: 0.9rem;
+    text-align: right;
+    margin: 0 1.5rem;
+    flex-shrink: 0;
+}
+
+.barbero-total {
+    font-weight: 700;
+    color: var(--azul-secundario);
+    font-size: 1.2rem;
+    text-align: right;
+    min-width: 120px;
+    flex-shrink: 0;
+}
+
+/* =============================================
    RESPONSIVE DESIGN
    ============================================= */
 @media (max-width: 768px) {
@@ -294,5 +395,13 @@ table tfoot td { padding: 1.25rem 1rem; font-weight: 700; }
     }
     h1 {
         font-size: 1.25rem;
+    }
+
+    .barbero-stat-item {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+    .barbero-stat-item > * {
+        text-align: center;
     }
 }
