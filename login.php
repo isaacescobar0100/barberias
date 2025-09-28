@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         header("Location: superadmin_dashboard.php");
                         exit();
                     } else {
-                        header("Location: admin_dashboard.php"); // O a la vista principal del admin
+                        header("Location: registro/index.php"); // Redirigir al panel de admin principal
                         exit();
                     }
                 } else {
