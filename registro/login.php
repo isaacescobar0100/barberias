@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'db_config.php'; // Asumo que este archivo existirá
+require_once 'config/db_config.php'; // Asumo que este archivo existirá
 
 // Si el usuario ya está logueado, redirigir según su rol
 if (isset($_SESSION['user_id'])) {
@@ -86,7 +86,7 @@ $mysqli->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | BarberShop Pro</title>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="login_styles.css">
+    <link rel="stylesheet" href="css/login_styles.css">
 </head>
 <body>
     <div class="login-container">
