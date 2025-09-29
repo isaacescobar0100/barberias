@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'db_config.php';
+require_once 'config/db_config.php';
 
 // ------------------------------------
 // 1. PROCESAR ACCIONES POST
@@ -322,7 +322,7 @@ $stats_barbero_query = $mysqli->query("
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
     <!-- Header -->
