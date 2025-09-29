@@ -713,7 +713,13 @@ $stats_barbero_query = $mysqli->query("
 
         // --- Sidebar Toggle ---
         if (hamburgerBtn && sidebar) {
-            hamburgerBtn.addEventListener('click', () => sidebar.classList.toggle('show'));
+            hamburgerBtn.addEventListener('click', () => {
+                if (window.innerWidth > 768) {
+                    document.body.classList.toggle('sidebar-collapsed');
+                } else {
+                    sidebar.classList.toggle('show');
+                }
+            });
         }
 
         // --- Navigation ---
